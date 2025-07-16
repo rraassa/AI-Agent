@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ 초고속 AI 영상 음성 변환</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+        }
+        
+        .header .speed-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .speed-features {
+            background: #f0f8ff;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .speed-features h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            color: #555;
+        }
+        
+        .feature-item::before {
+            content: "⚡";
+            margin-right: 8px;
+            font-size: 1.2em;
+        }
+        
+        .upload-section {
+            margin-bottom: 40px;
+        }
+        
+        .upload-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            text-align: center;
+        }
+        
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 50px;
+            text-align: center;
+            background: #f8f9ff;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+            transform: translateY(-2px);
+        }
+        
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+            transform: scale(1.02);
+        }
+        
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin-top: 15px;
+        }
+        
+        .upload-btn:hover {
+            transform: translateY(-3px);
+        }
+        
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .progress-section {
+            display: none;
+            margin-top: 30px;
+            padding: 30px;
+            background: #f8f9ff;
+            border-radius: 15px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 12px;
+            position: relative;
+        }
+        
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .progress-text {
+            text-align: center;
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .progress-message {
+            text-align: center;
+            color: #666;
+            font-size: 1em;
+        }
+        
+        .speed-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .result-section {
+            display: none;
+            margin-top: 30px;
+            padding: 30px;
+            background: #f0f8ff;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .result-title {
+            color: #333;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .transcript-preview {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            line-height: 1.6;
+            color: #333;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .download-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .download-card {
+            text-align: center;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+        
+        .download-card h4 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .download-btn {
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+            min-width: 150px;
+        }
+        
+        .download-btn.txt {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .download-btn.video {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .file-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .file-info h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            color: #856404;
+            padding: 8px 0;
+            border-bottom: 1px solid #ffeaa7;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ 초고속 AI 영상 변환</h1>
+            <p>멀티코어 CPU 활용 • GPU 가속 • 고속 업로드 • TXT + 영상 다운로드</p>
+            <div class="speed-badge">🚀 최대 2GB 파일 지원</div>
+        </div>
+        
+        <div class="content">
+            <!-- 속도 최적화 기능 소개 -->
+            <div class="speed-features">
+                <h3>🔥 초고속 처리 기능</h3>
+                <div class="feature-list">
+                    <div class="feature-item">멀티코어 CPU 활용</div>
+                    <div class="feature-item">GPU 가속 변환</div>
+                    <div class="feature-item">병렬 처리 최적화</div>
+                    <div class="feature-item">고속 업로드</div>
+                    <div class="feature-item">720p 영상 다운로드</div>
+                    <div class="feature-item">TXT 파일 다운로드</div>
+                </div>
+            </div>
+            
+            <!-- 파일 업로드 섹션 -->
+            <div class="upload-section">
+                <h2>📁 영상 파일 업로드</h2>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">🎬</div>
+                    <h3>여기에 영상 파일을 드래그하거나 클릭하여 선택하세요</h3>
+                    <p style="color: #666; font-size: 1em; margin-top: 15px;">
+                        지원 형식: MP4, AVI, MOV, MKV, WMV (최대 2GB)<br>
+                        <strong>720p 자동 변환 • 초고속 처리 • AI 음성 인식 • 영상 다운로드</strong>
+                    </p>
+                    <input type="file" id="fileInput" class="file-input" accept="video/*">
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                        파일 선택하기
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 진행 상황 섹션 -->
+            <div class="progress-section" id="progressSection">
+                <div class="progress-text" id="progressText">0%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-message" id="progressMessage">고속 처리를 준비하고 있습니다...</div>
+                <div class="speed-indicator">
+                    <span id="speedInfo">처리 속도: 계산 중...</span>
+                    <span id="timeInfo">예상 시간: 계산 중...</span>
+                </div>
+            </div>
+            
+            <!-- 결과 섹션 -->
+            <div class="result-section" id="resultSection">
+                <h3 class="result-title" id="resultTitle">🎉 변환 완료!</h3>
+                <div class="transcript-preview" id="transcriptPreview"></div>
+                
+                <div class="download-section">
+                    <div class="download-card">
+                        <h4>📄 텍스트 파일</h4>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
+                            음성 인식 결과를 TXT 파일로 다운로드
+                        </p>
+                        <a href="#" id="downloadTxtBtn" class="download-btn txt">
+                            📥 TXT 다운로드
+                        </a>
+                    </div>
+                    
+                    <div class="download-card">
+                        <h4>🎬 720p 영상 파일</h4>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
+                            720p로 변환된 영상 파일 다운로드
+                        </p>
+                        <a href="#" id="downloadVideoBtn" class="download-btn video">
+                            📥 영상 다운로드
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 파일 정보 -->
+            <div class="file-info">
+                <h3>📊 처리 성능 정보</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span>최대 파일 크기:</span>
+                        <span>2GB</span>
+                    </div>
+                    <div class="info-item">
+                        <span>변환 속도:</span>
+                        <span>초고속 (멀티코어)</span>
+                    </div>
+                    <div class="info-item">
+                        <span>출력 해상도:</span>
+                        <span>720p HD</span>
+                    </div>
+                    <div class="info-item">
+                        <span>AI 음성 인식:</span>
+                        <span>한국어 최적화</span>
+                    </div>
+                    <div class="info-item">
+                        <span>결과 파일:</span>
+                        <span>TXT + MP4</span>
+                    </div>
+                    <div class="info-item">
+                        <span>처리 방식:</span>
+                        <span>클라우드 병렬처리</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentJobId = null;
+        let startTime = null;
+        
+        // 파일 드래그 앤 드롭
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                startProcessing();
+            }
+        });
+        
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                startProcessing();
+            }
+        });
+        
+        function startProcessing() {
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('파일을 선택해주세요.');
+                return;
+            }
+            
+            // 파일 크기 체크 (2GB)
+            if (file.size > 2 * 1024 * 1024 * 1024) {
+                alert('파일 크기가 2GB를 초과합니다.');
+                return;
+            }
+            
+            // UI 업데이트
+            document.getElementById('progressSection').style.display = 'block';
+            document.getElementById('resultSection').style.display = 'none';
+            
+            startTime = Date.now();
+            
+            // FormData 생성
+            const formData = new FormData();
+            formData.append('video_file', file);
+            
+            // 서버에 요청
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                currentJobId = data.job_id;
+                checkStatus();
+            })
+            .catch(error => {
+                showError(error.message);
+                resetUI();
+            });
+        }
+        
+        function checkStatus() {
+            if (!currentJobId) return;
+            
+            fetch(`/status/${currentJobId}`)
+            .then(response => response.json())
+            .then(data => {
+                updateProgress(data);
+                
+                if (data.status === 'completed') {
+                    showResult(data);
+                    resetUI();
+                } else if (data.status === 'error') {
+                    showError(data.message);
+                    resetUI();
+                } else {
+                    // 계속 상태 확인
+                    setTimeout(checkStatus, 1000); // 1초마다 확인
+                }
+            })
+            .catch(error => {
+                showError('상태 확인 중 오류가 발생했습니다.');
+                resetUI();
+            });
+        }
+        
+        function updateProgress(data) {
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const progressMessage = document.getElementById('progressMessage');
+            const speedInfo = document.getElementById('speedInfo');
+            const timeInfo = document.getElementById('timeInfo');
+            
+            progressFill.style.width = data.progress + '%';
+            progressText.textContent = data.progress + '%';
+            progressMessage.textContent = data.message;
+            
+            if (data.elapsed_time && startTime) {
+                const elapsed = Math.round(data.elapsed_time);
+                const speed = data.progress / elapsed * 100;
+                const remaining = data.progress > 0 ? (100 - data.progress) / speed : 0;
+                
+                speedInfo.textContent = `처리 속도: ${speed.toFixed(1)}%/초`;
+                timeInfo.textContent = `남은 시간: 약 ${Math.round(remaining)}초`;
+            }
+        }
+        
+        function showResult(data) {
+            const resultSection = document.getElementById('resultSection');
+            const resultTitle = document.getElementById('resultTitle');
+            const transcriptPreview = document.getElementById('transcriptPreview');
+            const downloadTxtBtn = document.getElementById('downloadTxtBtn');
+            const downloadVideoBtn = document.getElementById('downloadVideoBtn');
+            
+            resultTitle.textContent = `🎉 "${data.title}" 변환 완료!`;
+            
+            // 텍스트 미리보기 (처음 200자)
+            const preview = data.transcript ? 
+                (data.transcript.length > 200 ? 
+                    data.transcript.substring(0, 200) + '...' : 
+                    data.transcript) : 
+                '텍스트를 추출할 수 없습니다.';
+            
+            transcriptPreview.textContent = preview;
+            
+            // 다운로드 링크 설정
+            downloadTxtBtn.href = `/download/txt/${currentJobId}`;
+            downloadVideoBtn.href = `/download/video/${currentJobId}`;
+            
+            resultSection.style.display = 'block';
+            
+            // 완료 시간 표시
+            if (data.end_time && data.start_time) {
+                const totalTime = Math.round(data.end_time - data.start_time);
+                document.getElementById('progressMessage').textContent = 
+                    `🚀 초고속 변환 완료! (총 ${totalTime}초 소요)`;
+            }
+        }
+        
+        function showError(message) {
+            const progressSection = document.getElementById('progressSection');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            
+            progressSection.appendChild(errorDiv);
+        }
+        
+        function resetUI() {
+            // 입력 필드 초기화
+            document.getElementById('fileInput').value = '';
+            currentJobId = null;
+            startTime = null;
+        }
+    </script>
+</body>
+</html>

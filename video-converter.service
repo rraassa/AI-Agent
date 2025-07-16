@@ -1,0 +1,19 @@
+[Unit]
+Description=Video Converter Web Application
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/video-converter
+ExecStart=/usr/bin/python3 /opt/video-converter/app.py
+Restart=always
+RestartSec=10
+Environment=PYTHONPATH=/opt/video-converter
+Environment=AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_ID
+Environment=AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY
+Environment=AWS_SESSION_TOKEN=YOUR_SESSION_TOKEN
+Environment=AWS_DEFAULT_REGION=ap-northeast-2
+
+[Install]
+WantedBy=multi-user.target
